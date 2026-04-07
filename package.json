@@ -1,7 +1,7 @@
 {
   "name": "qa-agentic",
   "version": "1.0.0",
-  "description": "Playwright E2E tests for paintiliciousartstudio.com",
+  "description": "Playwright E2E tests for paintiliciousart.com",
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",

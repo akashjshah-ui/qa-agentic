@@ -7,7 +7,7 @@ module.exports = defineConfig({
   retries: 1,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: 'https://www.paintiliciousartstudio.com',
+    baseURL: 'https://www.paintiliciousart.com',
     headless: true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
