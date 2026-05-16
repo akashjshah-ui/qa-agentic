@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tic-Tac-Toe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      font-family: 'Segoe UI', sans-serif;
+      color: #eee;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.4rem;
+      letter-spacing: 2px;
+      color: #e94560;
+    }
+
+    #subtitle {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 1.8rem;
+      letter-spacing: 1px;
+    }
+
+    #status {
+      font-size: 1.1rem;
+      margin-bottom: 1.2rem;
+      min-height: 1.6rem;
+      color: #a8d8ea;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 110px);
+      grid-template-rows: repeat(3, 110px);
+      gap: 8px;
+    }
+
+    .cell {
+      background: #16213e;
+      border: 2px solid #0f3460;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+
+    .cell:hover:not(.taken) {
+      background: #0f3460;
+      transform: scale(1.04);
+    }
+
+    .cell.taken {
+      cursor: default;
+    }
+
+    .cell.x {
+      color: #e94560;
+    }
+
+    .cell.o {
+      color: #53d8fb;
+    }
+
+    .cell.win {
+      background: #0f3460;
+      border-color: #e94560;
+      animation: pulse 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    #controls {
+      margin-top: 1.6rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    button {
+      padding: 0.55rem 1.4rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    #btn-restart {
+      background: #e94560;
+      color: #fff;
+    }
+
+    #btn-toggle {
+      background: #0f3460;
+      color: #eee;
+      border: 2px solid #53d8fb;
+    }
+
+    #scores {
+      margin-top: 1.4rem;
+      display: flex;
+      gap: 2rem;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+
+    #scores span {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    #scores strong {
+      font-size: 1.3rem;
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic-Tac-Toe</h1>
+  <p id="subtitle">You vs. AI (Minimax)</p>
+
+  <div id="status">Your turn — pick a square</div>
+
+  <div id="board">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
+  </div>
+
+  <div id="controls">
+    <button id="btn-restart">Restart</button>
+    <button id="btn-toggle">Go Second</button>
+  </div>
+
+  <div id="scores">
+    <span>You (X) <strong id="score-x">0</strong></span>
+    <span>Draws <strong id="score-d">0</strong></span>
+    <span>AI (O) <strong id="score-o">0</strong></span>
+  </div>
+
+  <script>
+    const HUMAN = 'X';
+    const AI    = 'O';
+    const WIN_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    let board = Array(9).fill(null);
+    let gameOver = false;
+    let humanGoesFirst = true;
+    let scores = { X: 0, O: 0, D: 0 };
+
+    const cells   = document.querySelectorAll('.cell');
+    const status  = document.getElementById('status');
+    const btnToggle = document.getElementById('btn-toggle');
+
+    function checkWinner(b) {
+      for (const [a, i, c] of WIN_LINES) {
+        if (b[a] && b[a] === b[i] && b[a] === b[c]) return { winner: b[a], line: [a, i, c] };
+      }
+      if (b.every(v => v)) return { winner: 'draw', line: [] };
+      return null;
+    }
+
+    // Minimax with alpha-beta pruning
+    function minimax(b, isMaximising, alpha, beta) {
+      const result = checkWinner(b);
+      if (result) {
+        if (result.winner === AI)    return  10;
+        if (result.winner === HUMAN) return -10;
+        return 0;
+      }
+
+      if (isMaximising) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (!b[i]) {
+            b[i] = AI;
+            best = Math.max(best, minimax(b, false, alpha, beta));
+            b[i] = null;
+            alpha = Math.max(alpha, best);
+            if (beta <= alpha) break;
+          }
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (!b[i]) {
+            b[i] = HUMAN;
+            best = Math.min(best, minimax(b, true, alpha, beta));
+            b[i] = null;
+            beta = Math.min(beta, best);
+            if (beta <= alpha) break;
+          }
+        }
+        return best;
+      }
+    }
+
+    function bestMove(b) {
+      let best = -Infinity, move = -1;
+      for (let i = 0; i < 9; i++) {
+        if (!b[i]) {
+          b[i] = AI;
+          const score = minimax(b, false, -Infinity, Infinity);
+          b[i] = null;
+          if (score > best) { best = score; move = i; }
+        }
+      }
+      return move;
+    }
+
+    function renderBoard() {
+      cells.forEach((cell, i) => {
+        cell.textContent = board[i] ?? '';
+        cell.className = 'cell' + (board[i] ? ' taken ' + board[i].toLowerCase() : '');
+      });
+    }
+
+    function endGame(result) {
+      gameOver = true;
+      if (result.winner === 'draw') {
+        status.textContent = "It's a draw!";
+        scores.D++;
+        document.getElementById('score-d').textContent = scores.D;
+      } else {
+        result.line.forEach(i => cells[i].classList.add('win'));
+        if (result.winner === HUMAN) {
+          status.textContent = 'You win! 🎉';
+          scores.X++;
+          document.getElementById('score-x').textContent = scores.X;
+        } else {
+          status.textContent = 'AI wins!';
+          scores.O++;
+          document.getElementById('score-o').textContent = scores.O;
+        }
+      }
+    }
+
+    function aiTurn() {
+      if (gameOver) return;
+      status.textContent = 'AI is thinking…';
+      // tiny delay for UX feel
+      setTimeout(() => {
+        const move = bestMove(board);
+        board[move] = AI;
+        renderBoard();
+        const result = checkWinner(board);
+        if (result) { endGame(result); return; }
+        status.textContent = 'Your turn — pick a square';
+      }, 300);
+    }
+
+    function handleClick(e) {
+      const i = +e.currentTarget.dataset.index;
+      if (gameOver || board[i]) return;
+      board[i] = HUMAN;
+      renderBoard();
+      const result = checkWinner(board);
+      if (result) { endGame(result); return; }
+      aiTurn();
+    }
+
+    function startGame() {
+      board = Array(9).fill(null);
+      gameOver = false;
+      renderBoard();
+      if (humanGoesFirst) {
+        status.textContent = 'Your turn — pick a square';
+      } else {
+        status.textContent = 'AI goes first…';
+        aiTurn();
+      }
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleClick));
+
+    document.getElementById('btn-restart').addEventListener('click', startGame);
+
+    btnToggle.addEventListener('click', () => {
+      humanGoesFirst = !humanGoesFirst;
+      btnToggle.textContent = humanGoesFirst ? 'Go Second' : 'Go First';
+      startGame();
+    });
+
+    startGame();
+  </script>
+</body>
+</html>
