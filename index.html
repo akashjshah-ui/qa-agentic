@@ -270,18 +270,10 @@
     <span>AI 🐸 <strong id="score-o">0</strong></span>
   </div>
 
+  <script src="game.js"></script>
   <script>
-    const HUMAN = 'X';
-    const AI    = 'O';
     const HUMAN_EMOJI = '🍦';
     const AI_EMOJI    = '🐸';
-    const MOVE_TIME   = 15; // seconds per turn
-
-    const WIN_LINES = [
-      [0,1,2],[3,4,5],[6,7,8],
-      [0,3,6],[1,4,7],[2,5,8],
-      [0,4,8],[2,4,6]
-    ];
 
     let board = Array(9).fill(null);
     let gameOver = false;
@@ -337,62 +329,6 @@
       const warn = timeLeft <= 5;
       timerBar.classList.toggle('warning', warn);
       timerLabel.classList.toggle('warning', warn);
-    }
-
-    // ── Game logic ───────────────────────────────────────
-    function checkWinner(b) {
-      for (const [a, i, c] of WIN_LINES) {
-        if (b[a] && b[a] === b[i] && b[a] === b[c]) return { winner: b[a], line: [a, i, c] };
-      }
-      if (b.every(v => v)) return { winner: 'draw', line: [] };
-      return null;
-    }
-
-    function minimax(b, isMaximising, alpha, beta) {
-      const result = checkWinner(b);
-      if (result) {
-        if (result.winner === AI)    return  10;
-        if (result.winner === HUMAN) return -10;
-        return 0;
-      }
-      if (isMaximising) {
-        let best = -Infinity;
-        for (let i = 0; i < 9; i++) {
-          if (!b[i]) {
-            b[i] = AI;
-            best = Math.max(best, minimax(b, false, alpha, beta));
-            b[i] = null;
-            alpha = Math.max(alpha, best);
-            if (beta <= alpha) break;
-          }
-        }
-        return best;
-      } else {
-        let best = Infinity;
-        for (let i = 0; i < 9; i++) {
-          if (!b[i]) {
-            b[i] = HUMAN;
-            best = Math.min(best, minimax(b, true, alpha, beta));
-            b[i] = null;
-            beta = Math.min(beta, best);
-            if (beta <= alpha) break;
-          }
-        }
-        return best;
-      }
-    }
-
-    function bestMove(b) {
-      let best = -Infinity, move = -1;
-      for (let i = 0; i < 9; i++) {
-        if (!b[i]) {
-          b[i] = AI;
-          const score = minimax(b, false, -Infinity, Infinity);
-          b[i] = null;
-          if (score > best) { best = score; move = i; }
-        }
-      }
-      return move;
     }
 
     function renderBoard(newIndex = -1) {

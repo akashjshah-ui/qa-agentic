@@ -1,0 +1,28 @@
+{
+  "name": "tic-tac-toe",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "projects": [
+      {
+        "displayName": "unit",
+        "testMatch": ["**/tests/unit/**/*.test.js"],
+        "testEnvironment": "node"
+      },
+      {
+        "displayName": "functional",
+        "testMatch": ["**/tests/functional/**/*.test.js"],
+        "testEnvironment": "jsdom"
+      }
+    ],
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": ["game.js"]
+  }
+}
