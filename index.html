@@ -38,63 +38,148 @@
 
     #status {
       font-size: 1.1rem;
-      margin-bottom: 1.2rem;
+      margin-bottom: 0.6rem;
       min-height: 1.6rem;
       color: #a8d8ea;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
 
+    /* ── Timer ── */
+    #timer-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+      font-size: 0.9rem;
+      color: #aaa;
+      min-height: 1.4rem;
+    }
+
+    #timer-bar-bg {
+      width: 160px;
+      height: 8px;
+      background: #0f3460;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    #timer-bar {
+      height: 100%;
+      width: 100%;
+      background: #53d8fb;
+      border-radius: 4px;
+      transition: width 0.9s linear, background 0.3s;
+    }
+
+    #timer-bar.warning {
+      background: #e94560;
+    }
+
+    #timer-label {
+      min-width: 2.2rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      color: #53d8fb;
+    }
+
+    #timer-label.warning {
+      color: #e94560;
+    }
+
+    /* ── Board ── */
     #board {
       display: grid;
-      grid-template-columns: repeat(3, 110px);
-      grid-template-rows: repeat(3, 110px);
-      gap: 8px;
+      grid-template-columns: repeat(3, 120px);
+      grid-template-rows: repeat(3, 120px);
+      gap: 10px;
+      perspective: 600px;
     }
 
     .cell {
-      background: #16213e;
-      border: 2px solid #0f3460;
-      border-radius: 10px;
+      position: relative;
+      background: linear-gradient(145deg, #1e2d50, #131e38);
+      border: 2px solid #1e3a6e;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3rem;
-      font-weight: 700;
+      font-size: 3.2rem;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
       user-select: none;
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s;
+      box-shadow:
+        4px 4px 10px rgba(0,0,0,0.5),
+        -2px -2px 6px rgba(255,255,255,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    /* shiny top edge */
+    .cell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
     }
 
     .cell:hover:not(.taken) {
-      background: #0f3460;
-      transform: scale(1.04);
+      transform: translateY(-6px) rotateX(8deg) scale(1.06);
+      box-shadow:
+        8px 14px 22px rgba(0,0,0,0.6),
+        -2px -2px 8px rgba(255,255,255,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        0 0 18px rgba(83,216,251,0.25);
+      background: linear-gradient(145deg, #223468, #162240);
+      border-color: #53d8fb;
+    }
+
+    /* wiggle on hover */
+    .cell:hover:not(.taken) {
+      animation: wiggle 0.35s ease forwards;
+    }
+
+    @keyframes wiggle {
+      0%   { transform: translateY(-6px) rotateX(8deg) scale(1.06) rotateZ(0deg); }
+      25%  { transform: translateY(-6px) rotateX(8deg) scale(1.06) rotateZ(-2deg); }
+      75%  { transform: translateY(-6px) rotateX(8deg) scale(1.06) rotateZ(2deg); }
+      100% { transform: translateY(-6px) rotateX(8deg) scale(1.06) rotateZ(0deg); }
     }
 
     .cell.taken {
       cursor: default;
     }
 
-    .cell.x {
-      color: #e94560;
+    /* drop-in animation when a piece is placed */
+    @keyframes dropIn {
+      0%   { transform: translateY(-30px) scale(0.4); opacity: 0; }
+      60%  { transform: translateY(4px) scale(1.1); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
     }
 
-    .cell.o {
-      color: #53d8fb;
+    .cell.placed {
+      animation: dropIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
     }
 
     .cell.win {
-      background: #0f3460;
+      background: linear-gradient(145deg, #1e3a6e, #112244);
       border-color: #e94560;
-      animation: pulse 0.5s ease;
+      box-shadow:
+        0 0 20px rgba(233,69,96,0.5),
+        4px 4px 10px rgba(0,0,0,0.5);
+      animation: winPulse 0.6s ease;
     }
 
-    @keyframes pulse {
+    @keyframes winPulse {
       0%   { transform: scale(1); }
-      50%  { transform: scale(1.08); }
-      100% { transform: scale(1); }
+      40%  { transform: scale(1.12) rotateZ(-3deg); }
+      70%  { transform: scale(1.08) rotateZ(2deg); }
+      100% { transform: scale(1) rotateZ(0deg); }
     }
 
+    /* ── Controls ── */
     #controls {
       margin-top: 1.6rem;
       display: flex;
@@ -127,6 +212,7 @@
       border: 2px solid #53d8fb;
     }
 
+    /* ── Scores ── */
     #scores {
       margin-top: 1.4rem;
       display: flex;
@@ -150,9 +236,14 @@
 </head>
 <body>
   <h1>Tic-Tac-Toe</h1>
-  <p id="subtitle">You vs. AI (Minimax)</p>
+  <p id="subtitle">You (🍦) vs. AI (🐸) — Minimax</p>
 
   <div id="status">Your turn — pick a square</div>
+
+  <div id="timer-wrap">
+    <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+    <span id="timer-label">15</span>s
+  </div>
 
   <div id="board">
     <div class="cell" data-index="0"></div>
@@ -172,14 +263,18 @@
   </div>
 
   <div id="scores">
-    <span>You (X) <strong id="score-x">0</strong></span>
+    <span>You 🍦 <strong id="score-x">0</strong></span>
     <span>Draws <strong id="score-d">0</strong></span>
-    <span>AI (O) <strong id="score-o">0</strong></span>
+    <span>AI 🐸 <strong id="score-o">0</strong></span>
   </div>
 
   <script>
     const HUMAN = 'X';
     const AI    = 'O';
+    const HUMAN_EMOJI = '🍦';
+    const AI_EMOJI    = '🐸';
+    const MOVE_TIME   = 15; // seconds per turn
+
     const WIN_LINES = [
       [0,1,2],[3,4,5],[6,7,8],
       [0,3,6],[1,4,7],[2,5,8],
@@ -191,10 +286,58 @@
     let humanGoesFirst = true;
     let scores = { X: 0, O: 0, D: 0 };
 
-    const cells   = document.querySelectorAll('.cell');
-    const status  = document.getElementById('status');
-    const btnToggle = document.getElementById('btn-toggle');
+    // timer state
+    let timerInterval = null;
+    let timeLeft = MOVE_TIME;
 
+    const cells      = document.querySelectorAll('.cell');
+    const status     = document.getElementById('status');
+    const btnToggle  = document.getElementById('btn-toggle');
+    const timerBar   = document.getElementById('timer-bar');
+    const timerLabel = document.getElementById('timer-label');
+
+    // ── Timer ────────────────────────────────────────────
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = MOVE_TIME;
+      updateTimerUI();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          // auto-pick a random empty square for the human
+          const empty = board.map((v,i) => v ? null : i).filter(v => v !== null);
+          if (empty.length) {
+            const i = empty[Math.floor(Math.random() * empty.length)];
+            board[i] = HUMAN;
+            renderBoard(i);
+            const result = checkWinner(board);
+            if (result) { endGame(result); return; }
+            aiTurn();
+          }
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerBar.style.width = '0%';
+      timerLabel.textContent = '';
+      timerBar.classList.remove('warning');
+      timerLabel.classList.remove('warning');
+    }
+
+    function updateTimerUI() {
+      const pct = (timeLeft / MOVE_TIME) * 100;
+      timerBar.style.width = pct + '%';
+      timerLabel.textContent = timeLeft;
+      const warn = timeLeft <= 5;
+      timerBar.classList.toggle('warning', warn);
+      timerLabel.classList.toggle('warning', warn);
+    }
+
+    // ── Game logic ───────────────────────────────────────
     function checkWinner(b) {
       for (const [a, i, c] of WIN_LINES) {
         if (b[a] && b[a] === b[i] && b[a] === b[c]) return { winner: b[a], line: [a, i, c] };
@@ -203,7 +346,6 @@
       return null;
     }
 
-    // Minimax with alpha-beta pruning
     function minimax(b, isMaximising, alpha, beta) {
       const result = checkWinner(b);
       if (result) {
@@ -211,7 +353,6 @@
         if (result.winner === HUMAN) return -10;
         return 0;
       }
-
       if (isMaximising) {
         let best = -Infinity;
         for (let i = 0; i < 9; i++) {
@@ -252,15 +393,17 @@
       return move;
     }
 
-    function renderBoard() {
+    function renderBoard(newIndex = -1) {
       cells.forEach((cell, i) => {
-        cell.textContent = board[i] ?? '';
-        cell.className = 'cell' + (board[i] ? ' taken ' + board[i].toLowerCase() : '');
+        const val = board[i];
+        cell.textContent = val === HUMAN ? HUMAN_EMOJI : val === AI ? AI_EMOJI : '';
+        cell.className = 'cell' + (val ? ' taken' : '') + (i === newIndex ? ' placed' : '');
       });
     }
 
     function endGame(result) {
       gameOver = true;
+      stopTimer();
       if (result.winner === 'draw') {
         status.textContent = "It's a draw!";
         scores.D++;
@@ -272,7 +415,7 @@
           scores.X++;
           document.getElementById('score-x').textContent = scores.X;
         } else {
-          status.textContent = 'AI wins!';
+          status.textContent = 'AI wins! 🐸';
           scores.O++;
           document.getElementById('score-o').textContent = scores.O;
         }
@@ -281,23 +424,24 @@
 
     function aiTurn() {
       if (gameOver) return;
-      status.textContent = 'AI is thinking…';
-      // tiny delay for UX feel
+      stopTimer();
+      status.textContent = 'AI is thinking… 🐸';
       setTimeout(() => {
         const move = bestMove(board);
         board[move] = AI;
-        renderBoard();
+        renderBoard(move);
         const result = checkWinner(board);
         if (result) { endGame(result); return; }
-        status.textContent = 'Your turn — pick a square';
-      }, 300);
+        status.textContent = 'Your turn — pick a square 🍦';
+        startTimer();
+      }, 350);
     }
 
     function handleClick(e) {
       const i = +e.currentTarget.dataset.index;
       if (gameOver || board[i]) return;
       board[i] = HUMAN;
-      renderBoard();
+      renderBoard(i);
       const result = checkWinner(board);
       if (result) { endGame(result); return; }
       aiTurn();
@@ -307,18 +451,18 @@
       board = Array(9).fill(null);
       gameOver = false;
       renderBoard();
+      stopTimer();
       if (humanGoesFirst) {
-        status.textContent = 'Your turn — pick a square';
+        status.textContent = 'Your turn — pick a square 🍦';
+        startTimer();
       } else {
-        status.textContent = 'AI goes first…';
+        status.textContent = 'AI goes first… 🐸';
         aiTurn();
       }
     }
 
     cells.forEach(cell => cell.addEventListener('click', handleClick));
-
     document.getElementById('btn-restart').addEventListener('click', startGame);
-
     btnToggle.addEventListener('click', () => {
       humanGoesFirst = !humanGoesFirst;
       btnToggle.textContent = humanGoesFirst ? 'Go Second' : 'Go First';
